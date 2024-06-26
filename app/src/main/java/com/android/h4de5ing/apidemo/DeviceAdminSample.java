@@ -2,7 +2,6 @@ package com.android.h4de5ing.apidemo;
 
 import android.app.ActivityManager;
 import android.app.AlertDialog;
-import android.app.admin.DeviceAdminReceiver;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -23,6 +22,8 @@ import android.preference.PreferenceScreen;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.android.settingc.AdminReceiver;
 
 import java.util.List;
 import java.util.Objects;
@@ -82,7 +83,7 @@ public class DeviceAdminSample extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         // Prepare to work with the DPM
         mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        mDeviceAdminSample = new ComponentName(this, DeviceAdminSampleReceiver.class);
+        mDeviceAdminSample = new ComponentName(this, AdminReceiver.class);
     }
 
     /**
@@ -282,9 +283,13 @@ public class DeviceAdminSample extends PreferenceActivity {
             mEnableCheckbox.setChecked(mAdminActive);
             enableDeviceCapabilitiesArea(mAdminActive);
             if (mAdminActive) {
-                mDPM.setCameraDisabled(mDeviceAdminSample, mDisableCameraCheckbox.isChecked());
-                mDPM.setKeyguardDisabledFeatures(mDeviceAdminSample, createKeyguardDisabledFlag());
-                reloadSummaries();
+                try {
+                    mDPM.setCameraDisabled(mDeviceAdminSample, mDisableCameraCheckbox.isChecked());
+                    mDPM.setKeyguardDisabledFeatures(mDeviceAdminSample, createKeyguardDisabledFlag());
+                    reloadSummaries();
+                } catch (Exception e) {
+                    e.fillInStackTrace();
+                }
             }
         }
 
@@ -978,74 +983,5 @@ public class DeviceAdminSample extends PreferenceActivity {
         } else {
             return false;
         }
-    }
-
-    /**
-     * Sample implementation of a DeviceAdminReceiver.  Your controller must provide one,
-     * although you may or may not implement all of the methods shown here.
-     * <p>
-     * All callbacks are on the UI thread and your implementations should not engage in any
-     * blocking operations, including disk I/O.
-     */
-    public static class DeviceAdminSampleReceiver extends DeviceAdminReceiver {
-        void showToast(Context context, String msg) {
-            String status = context.getString(R.string.admin_receiver_status, msg);
-            Toast.makeText(context, status, Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (Objects.equals(intent.getAction(), ACTION_DEVICE_ADMIN_DISABLE_REQUESTED)) {
-                abortBroadcast();
-            }
-            super.onReceive(context, intent);
-        }
-
-        @Override
-        public void onEnabled(Context context, Intent intent) {
-            showToast(context, context.getString(R.string.admin_receiver_status_enabled));
-        }
-
-        @Override
-        public CharSequence onDisableRequested(Context context, Intent intent) {
-            return context.getString(R.string.admin_receiver_status_disable_warning);
-        }
-
-        @Override
-        public void onDisabled(Context context, Intent intent) {
-            showToast(context, context.getString(R.string.admin_receiver_status_disabled));
-        }
-
-        @Override
-        public void onPasswordChanged(Context context, Intent intent) {
-            showToast(context, context.getString(R.string.admin_receiver_status_pw_changed));
-        }
-
-        @Override
-        public void onPasswordFailed(Context context, Intent intent) {
-            showToast(context, context.getString(R.string.admin_receiver_status_pw_failed));
-        }
-
-        @Override
-        public void onPasswordSucceeded(Context context, Intent intent) {
-            showToast(context, context.getString(R.string.admin_receiver_status_pw_succeeded));
-        }
-
-        @Override
-        public void onPasswordExpiring(Context context, Intent intent) {
-            DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(
-                    Context.DEVICE_POLICY_SERVICE);
-            long expr = dpm.getPasswordExpiration(
-                    new ComponentName(context, DeviceAdminSampleReceiver.class));
-            long delta = expr - System.currentTimeMillis();
-            boolean expired = delta < 0L;
-            String message = context.getString(expired ?
-                    R.string.expiration_status_past : R.string.expiration_status_future);
-            showToast(context, message);
-            Log.v(TAG, message);
-        }
-    }
-
-    public static class DeviceAdminSampleReceiver2 extends DeviceAdminReceiver {
     }
 }
