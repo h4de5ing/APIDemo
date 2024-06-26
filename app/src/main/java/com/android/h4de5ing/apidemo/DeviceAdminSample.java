@@ -29,15 +29,12 @@ import java.util.List;
 import java.util.Objects;
 
 public class DeviceAdminSample extends PreferenceActivity {
-
-    // Miscellaneous utilities and definitions
     private static final String TAG = "DeviceAdminSample";
     private static final int REQUEST_CODE_ENABLE_ADMIN = 1;
     private static final int REQUEST_CODE_START_ENCRYPTION = 2;
     private static final long MS_PER_MINUTE = 60 * 1000;
     private static final long MS_PER_HOUR = 60 * MS_PER_MINUTE;
     private static final long MS_PER_DAY = 24 * MS_PER_HOUR;
-    // The following keys are used to find each preference item
     private static final String KEY_ENABLE_ADMIN = "key_enable_admin";
     private static final String KEY_DISABLE_CAMERA = "key_disable_camera";
     private static final String KEY_DISABLE_NOTIFICATIONS = "key_disable_notifications";
@@ -46,8 +43,7 @@ public class DeviceAdminSample extends PreferenceActivity {
     private static final String KEY_TRUST_AGENT_COMPONENT = "key_trust_agent_component";
     private static final String KEY_TRUST_AGENT_FEATURES = "key_trust_agent_features";
     private static final String KEY_DISABLE_KEYGUARD_WIDGETS = "key_disable_keyguard_widgets";
-    private static final String KEY_DISABLE_KEYGUARD_SECURE_CAMERA
-            = "key_disable_keyguard_secure_camera";
+    private static final String KEY_DISABLE_KEYGUARD_SECURE_CAMERA = "key_disable_keyguard_secure_camera";
     private static final String KEY_DISABLE_FINGERPRINT = "key_disable_fingerprint";
     private static final String KEY_DISABLE_REMOTE_INPUT = "key_disable_remote_input";
     private static final String KEY_CATEGORY_QUALITY = "key_category_quality";
@@ -74,14 +70,12 @@ public class DeviceAdminSample extends PreferenceActivity {
     private static final String KEY_CATEGORY_ENCRYPTION = "key_category_encryption";
     private static final String KEY_REQUIRE_ENCRYPTION = "key_require_encryption";
     private static final String KEY_ACTIVATE_ENCRYPTION = "key_activate_encryption";
-    // Interaction with the DevicePolicyManager
     DevicePolicyManager mDPM;
     ComponentName mDeviceAdminSample;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Prepare to work with the DPM
         mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         mDeviceAdminSample = new ComponentName(this, AdminReceiver.class);
     }
@@ -118,24 +112,20 @@ public class DeviceAdminSample extends PreferenceActivity {
      */
     public static class AdminSampleFragment extends PreferenceFragment
             implements OnPreferenceChangeListener, OnPreferenceClickListener {
-        // Useful instance variables
         protected DeviceAdminSample mActivity;
         protected DevicePolicyManager mDPM;
         protected ComponentName mDeviceAdminSample;
         protected boolean mAdminActive;
-        // Optional shared UI
         private PreferenceScreen mSetPassword;
         private EditTextPreference mResetPassword;
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
-            // Retrieve the useful instance variables
             mActivity = (DeviceAdminSample) getActivity();
             mDPM = mActivity.mDPM;
             mDeviceAdminSample = mActivity.mDeviceAdminSample;
             mAdminActive = mActivity.isActiveAdmin();
-            // Configure the shared UI elements (if they exist)
             mResetPassword = (EditTextPreference) findPreference(KEY_RESET_PASSWORD);
             mSetPassword = (PreferenceScreen) findPreference(KEY_SET_PASSWORD);
             if (mResetPassword != null) {
@@ -151,7 +141,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             super.onResume();
             mAdminActive = mActivity.isActiveAdmin();
             reloadSummaries();
-            // Resetting the password via API is available only to active admins
             if (mResetPassword != null) {
                 mResetPassword.setEnabled(mAdminActive);
             }
@@ -164,7 +153,6 @@ public class DeviceAdminSample extends PreferenceActivity {
         protected void reloadSummaries() {
             if (mSetPassword != null) {
                 if (mAdminActive) {
-                    // Show password-sufficient status under Set Password button
                     boolean sufficient = mDPM.isActivePasswordSufficient();
                     mSetPassword.setSummary(sufficient ?
                             R.string.password_sufficient : R.string.password_insufficient);
@@ -226,7 +214,6 @@ public class DeviceAdminSample extends PreferenceActivity {
      */
     public static class GeneralFragment extends AdminSampleFragment
             implements OnPreferenceChangeListener {
-        // UI elements
         private CheckBoxPreference mEnableCheckbox;
         private CheckBoxPreference mDisableCameraCheckbox;
         private CheckBoxPreference mDisableKeyguardWidgetsCheckbox;
@@ -276,7 +263,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             mTrustAgentFeatures.setOnPreferenceChangeListener(this);
         }
 
-        // At onResume time, reload UI with current values as required
         @Override
         public void onResume() {
             super.onResume();
@@ -321,13 +307,11 @@ public class DeviceAdminSample extends PreferenceActivity {
                 boolean value = (Boolean) newValue;
                 if (value != mAdminActive) {
                     if (value) {
-                        // Launch the activity to have the user enable our admin.
                         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdminSample);
                         intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
                                 mActivity.getString(R.string.add_admin_extra_app_text));
                         startActivityForResult(intent, REQUEST_CODE_ENABLE_ADMIN);
-                        // return false - don't update checkbox until we're really active
                         return false;
                     } else {
                         mDPM.removeActiveAdmin(mDeviceAdminSample);
@@ -338,7 +322,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             } else if (preference == mDisableCameraCheckbox) {
                 boolean value = (Boolean) newValue;
                 mDPM.setCameraDisabled(mDeviceAdminSample, value);
-                // Delay update because the change is only applied after exiting this method.
                 postReloadSummaries();
             } else if (preference == mDisableKeyguardWidgetsCheckbox
                     || preference == mDisableKeyguardSecureCameraCheckbox
@@ -447,8 +430,6 @@ public class DeviceAdminSample extends PreferenceActivity {
      */
     public static class QualityFragment extends AdminSampleFragment
             implements OnPreferenceChangeListener {
-        // Password quality values
-        // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
         final static int[] mPasswordQualityValues = new int[]{
                 DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED,
                 DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
@@ -458,8 +439,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                 DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC,
                 DevicePolicyManager.PASSWORD_QUALITY_COMPLEX
         };
-        // Password quality values (as strings, for the ListPreference entryValues)
-        // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
         final static String[] mPasswordQualityValueStrings = new String[]{
                 String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED),
                 String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_SOMETHING),
@@ -469,7 +448,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                 String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC),
                 String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_COMPLEX)
         };
-        // UI elements
         private PreferenceCategory mQualityCategory;
         private ListPreference mPasswordQuality;
         private EditTextPreference mMinLength;
@@ -501,7 +479,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             mMinUpperCase.setOnPreferenceChangeListener(this);
             mMinSymbols.setOnPreferenceChangeListener(this);
             mMinNonLetter.setOnPreferenceChangeListener(this);
-            // Finish setup of the quality dropdown
             mPasswordQuality.setEntryValues(mPasswordQualityValueStrings);
         }
 
@@ -517,7 +494,6 @@ public class DeviceAdminSample extends PreferenceActivity {
         @Override
         protected void reloadSummaries() {
             super.reloadSummaries();
-            // Show numeric settings for each policy API
             int local, global;
             local = mDPM.getPasswordQuality(mDeviceAdminSample);
             global = mDPM.getPasswordQuality(null);
@@ -579,7 +555,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             } else if (preference == mMinNonLetter) {
                 mDPM.setPasswordMinimumNonLetter(mDeviceAdminSample, value);
             }
-            // Delay update because the change is only applied after exiting this method.
             postReloadSummaries();
             return true;
         }
@@ -625,9 +600,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             mExpirationCategory.setEnabled(mAdminActive);
         }
 
-        /**
-         * Update the summaries of each item to show the local setting and the global setting.
-         */
         @Override
         protected void reloadSummaries() {
             super.reloadSummaries();
@@ -665,7 +637,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             } else if (preference == mExpirationTimeout) {
                 mDPM.setPasswordExpirationTimeout(mDeviceAdminSample, value * MS_PER_MINUTE);
             }
-            // Delay update because the change is only applied after exiting this method.
             postReloadSummaries();
             return true;
         }
@@ -688,11 +659,9 @@ public class DeviceAdminSample extends PreferenceActivity {
          * as well as the global (aggregate) status.
          */
         private String getExpirationStatus() {
-            // expirations are absolute;  convert to relative for display
             long localExpiration = mDPM.getPasswordExpiration(mDeviceAdminSample);
             long globalExpiration = mDPM.getPasswordExpiration(null);
             long now = System.currentTimeMillis();
-            // local expiration
             String local;
             if (localExpiration == 0) {
                 local = mActivity.getString(R.string.expiration_status_none);
@@ -705,7 +674,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                     local = mActivity.getString(R.string.expiration_status_past, dms);
                 }
             }
-            // global expiration
             String global;
             if (globalExpiration == 0) {
                 global = mActivity.getString(R.string.expiration_status_none);
@@ -798,7 +766,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                 }
                 mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, value);
             }
-            // Delay update because the change is only applied after exiting this method.
             postReloadSummaries();
             return true;
         }
@@ -906,7 +873,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             if (preference == mRequireEncryption) {
                 boolean newActive = (Boolean) newValue;
                 mDPM.setStorageEncryption(mDeviceAdminSample, newActive);
-                // Delay update because the change is only applied after exiting this method.
                 postReloadSummaries();
                 return true;
             }
@@ -922,7 +888,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                 if (alertIfMonkey(mActivity, R.string.monkey_encryption)) {
                     return true;
                 }
-                // Check to see if encryption is even supported on this device (it's optional).
                 if (mDPM.getStorageEncryptionStatus() ==
                         DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
@@ -931,7 +896,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                     builder.show();
                     return true;
                 }
-                // Launch the activity to activate encryption.  May or may not return!
                 Intent intent = new Intent(DevicePolicyManager.ACTION_START_ENCRYPTION);
                 startActivityForResult(intent, REQUEST_CODE_START_ENCRYPTION);
                 return true;
