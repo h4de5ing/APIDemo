@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         cb.isChecked = dpm.isAdminActive(componentName)
         cb.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-
                 val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
                 intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
                 intent.putExtra(
@@ -44,13 +43,6 @@ class MainActivity : AppCompatActivity() {
                 startActivityForResult(intent, 1)
             } else {
                 dpm.removeActiveAdmin(componentName)
-            }
-        }
-        findViewById<Button>(R.id.disable_camera).setOnClickListener {
-            if (dpm.isDeviceOwnerApp(packageName)) {
-                dpm.lockNow()
-            } else {
-                toast("请先成为设备管理员")
             }
         }
     }
